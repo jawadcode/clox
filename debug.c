@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include "debug.h"
+#include "value.h"
 
 void disassembleChunk(Chunk *chunk, const char *name)
 {
@@ -10,6 +11,15 @@ void disassembleChunk(Chunk *chunk, const char *name)
 	{
 		offset = disassembleInstruction(chunk, offset);
 	}
+}
+
+static int constantInstruction(const char *name, Chunk *chunk, int offset)
+{
+	uint8_t constant = chunk->code[offset + 1];
+	printf("%-16s %4d '", name, constant);
+	printValue(chunk->constants.values[constant]);
+	printf("'\n");
+	return offset + 2;
 }
 
 // Display simple instruction without any arguments
@@ -27,9 +37,13 @@ int disassembleInstruction(Chunk *chunk, int offset)
 	// Get instruction code at offset
 	uint8_t instruction = chunk->code[offset];
 
-	// Handle all different types of instructions
+	// Handle all different types of instruction
 	switch (instruction)
 	{
+	case OP_CONSTANT:
+	{
+		return constantInstruction("OP_CONSTANT", chunk, offset);
+	}
 	case OP_RETURN:
 	{
 		return simpleInstruction("OP_RETURN", offset);
