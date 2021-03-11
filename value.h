@@ -15,7 +15,7 @@ typedef struct
 {
 	int count;
 	int capacity;
-	Value* values;
+	Value *values;
 } ValueArray;
 
 // Initialise "array" by zeroing-out values

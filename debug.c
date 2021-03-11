@@ -39,13 +39,13 @@ int disassembleInstruction(Chunk *chunk, int offset)
 	if (offset > 0 &&
 			chunk->lines[offset] == chunk->lines[offset - 1])
 	{
-			printf("   | ");
-	} else
+		printf("   | ");
+	}
+	else
 	{
 		// If line number is different then print it as a 4 digit number with left aligned zero-padding
 		printf("%4d ", chunk->lines[offset]);
 	}
-	
 
 	// Get instruction code at offset
 	uint8_t instruction = chunk->code[offset];

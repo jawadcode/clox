@@ -22,7 +22,7 @@ void writeValueArray(ValueArray *array, Value value)
 	// If the capacity will not be exceeded, do nothing
 	// Add the value to the "array"'s values and then increment its counter
 	array->values[array->count] = value;
-	array->count++;	
+	array->count++;
 }
 
 void freeValueArray(ValueArray *array)
