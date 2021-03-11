@@ -21,7 +21,7 @@ typedef struct
 	uint8_t *code;
 } Chunk;
 
-// Initialise "chunk"
+// Initialise "chunk" to zero-out values
 void initChunk(Chunk *chunk);
 // Free all memory used by "chunk->code" and then reinitialise "chunk"
 void freeChunk(Chunk *chunk);
