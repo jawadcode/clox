@@ -37,6 +37,16 @@ static InterpretResult run()
 #define READ_BYTE() (*vm.ip++)
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
 
+// Perform binary operation on top two items in the stack
+// do {} while (false) makes it so that all of the statements end up in the same scope
+#define BINARY_OP(op) \
+	do                  \
+	{                   \
+		double b = pop(); \
+		double a = pop(); \
+		push(a op b);     \
+	} while (false);
+
 	for (;;)
 	{
 #ifdef DEBUG_TRACE_EXECUTION
@@ -61,19 +71,27 @@ static InterpretResult run()
 			push(constant);
 			break;
 		}
+		case OP_ADD:
+			BINARY_OP(+);
+			break;
+		case OP_SUBTRACT:
+			BINARY_OP(-);
+			break;
+		case OP_MULTIPLY:
+			BINARY_OP(*);
+			break;
+		case OP_DIVIDE:
+			BINARY_OP(/);
+			break;
 		case OP_NEGATE:
-		{
 			// Pop last value from stack, negate it, and then push it back on
 			push(-pop());
 			break;
-		}
 		case OP_RETURN:
-		{
 			// Print value of last item in stack before exiting
 			printValue(pop());
 			printf("\n");
 			return INTERPRET_OK;
-		}
 		}
 	}
 
