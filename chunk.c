@@ -37,6 +37,7 @@ int addConstant(Chunk *chunk, Value value)
 
 void freeChunk(Chunk *chunk)
 {
+	// Free all of the memory allocated for each array
 	FREE_ARRAY(uint8_t, chunk->code, chunk->capacity);
 	FREE_ARRAY(int, chunk->lines, chunk->capacity);
 	freeValueArray(&chunk->constants);

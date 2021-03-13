@@ -21,8 +21,6 @@
 	 - if oldSize != 0 and newSize == 0 then free the allocation
 	 - if oldSize != 0 and newSize < oldSize then shrink the existing allocation
 	 - and finally, if oldSize != 0 and newSize > oldSize then grow the existing allocation.
-	 - (exits program if pointer returned from realloc is NULL)
-	 - (returns pointer to array)
  */
 void *reallocate(void *pointer, size_t oldSize, size_t newSize);
 

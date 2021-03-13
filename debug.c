@@ -14,12 +14,17 @@ void disassembleChunk(Chunk *chunk, const char *name)
 	}
 }
 
+
+// Display operation of setting constant
 static int constantInstruction(const char *name, Chunk *chunk, int offset)
 {
+	// Grab constant value from position "offset + 1" since OP_CONSTANT takes 2 bytes
 	uint8_t constant = chunk->code[offset + 1];
+	// Print operation name and constant value
 	printf("%-16s %4d '", name, constant);
 	printValue(chunk->constants.values[constant]);
 	printf("'\n");
+	// Skip ahead by an extra byte because of the size of the instruction
 	return offset + 2;
 }
 
