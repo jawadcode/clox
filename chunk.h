@@ -7,15 +7,16 @@
 // Enum of all possible opcodes
 typedef enum
 {
-	OP_RETURN,
 	OP_CONSTANT,
+	OP_NEGATE,
+	OP_RETURN,
 } OpCode;
 
-/* Chunk of bytecode with:
-   - "count" holding the index of the next code to be inserted
-   - "capacity" holding the allocated size of "code" (in bytes)
-   - "code" holding the actual opcodes
-	 - "constants" holding all of the constant values
+/* Chunk of bytecode:
+   - "count" holds the index of the next code to be inserted
+   - "capacity" is the allocated size of "code" (in bytes)
+   - "code" is the actual array of opcodes
+	 - "constants" contains all of the constant values
  */
 typedef struct
 {

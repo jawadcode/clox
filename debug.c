@@ -14,7 +14,6 @@ void disassembleChunk(Chunk *chunk, const char *name)
 	}
 }
 
-
 // Display operation of setting constant
 static int constantInstruction(const char *name, Chunk *chunk, int offset)
 {
@@ -40,7 +39,7 @@ int disassembleInstruction(Chunk *chunk, int offset)
 	// Print offset in 4-digit format with left aligned zero-padding
 	printf("%04d ", offset);
 
-	// If line number is the same as previous one then display "   | "
+	// If line number is the same as previous instruction then display "   | "
 	if (offset > 0 &&
 			chunk->lines[offset] == chunk->lines[offset - 1])
 	{
@@ -48,7 +47,7 @@ int disassembleInstruction(Chunk *chunk, int offset)
 	}
 	else
 	{
-		// If line number is different then print it as a 4 digit number with left aligned zero-padding
+		// If line number is different then print it
 		printf("%4d ", chunk->lines[offset]);
 	}
 
@@ -59,13 +58,11 @@ int disassembleInstruction(Chunk *chunk, int offset)
 	switch (instruction)
 	{
 	case OP_CONSTANT:
-	{
 		return constantInstruction("OP_CONSTANT", chunk, offset);
-	}
+	case OP_NEGATE:
+		return simpleInstruction("OP_NEGATE", offset);
 	case OP_RETURN:
-	{
 		return simpleInstruction("OP_RETURN", offset);
-	}
 	// Handle unknown instruction gracefully
 	default:
 	{
