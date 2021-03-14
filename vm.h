@@ -31,8 +31,8 @@ typedef enum
 void initVM();
 // Free all manually allocated fields in the Virtual Machine
 void freeVM();
-// Interpret "chunk" containing bytecode
-InterpretResult interpret(Chunk *chunk);
+// Interpret source code and return result
+InterpretResult interpret(const char *source);
 // Push "value" on the top of "vm.stack" and increment "vm.stackTop" pointer
 void push(Value value);
 // Decrements the "vm.stackTop" pointer and returns the value of what was at the top before it is overwritten
