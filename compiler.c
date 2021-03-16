@@ -7,6 +7,7 @@
 void compile(const char *source)
 {
 	initScanner(source);
+
 	// Little trick to make it print the first line number
 	int line = -1;
 
