@@ -21,6 +21,13 @@ typedef struct
 
 Parser parser;
 
+Chunk *compilingChunk;
+
+static Chunk *currentChunk()
+{
+	return compilingChunk;
+}
+
 static void errorAt(Token *token, const char *message)
 {
 	// If there has already been an error then supress this one
@@ -69,6 +76,7 @@ static void advance()
 	}
 }
 
+// Consume until the desired token
 static void consume(TokenType type, const char *message)
 {
 	if (parser.current.type == type)
@@ -80,9 +88,33 @@ static void consume(TokenType type, const char *message)
 	errorAtCurrent(message);
 }
 
+// Write single OpCode to current chunk with line number
+static void emitByte(uint8_t byte)
+{
+	writeChunk(currentChunk(), byte, parser.previous.line);
+}
+
+static void emitBytes(uint8_t byte1, uint8_t byte2)
+{
+	emitByte(byte1);
+	emitByte(byte2);
+}
+
+// Emit "OP_RETURN" instruction and end program
+static void emitReturn()
+{
+	emitByte(OP_RETURN);
+}
+
+static void endCompiler()
+{
+	emitReturn();
+}
+
 bool compile(const char *source, Chunk *chunk)
 {
 	initScanner(source);
+	compilingChunk = chunk;
 
 	parser.hadError = false;
 	parser.panicMode = false;
@@ -90,6 +122,8 @@ bool compile(const char *source, Chunk *chunk)
 	advance();
 	expression();
 	consume(TOKEN_EOF, "Expected end of expression");
+
+	endCompiler();	
 
 	return !parser.hadError;
 }
