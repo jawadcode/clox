@@ -3,7 +3,7 @@
 
 #include "vm.h"
 
-// Compile source code to bytecode
-void compile(const char *source);
+// Compile source code and then write the bytecode to "chunk"
+bool compile(const char *source, Chunk *chunk);
 
 #endif
