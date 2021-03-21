@@ -3,8 +3,39 @@
 
 #include "common.h"
 
-// Lox number type
-typedef double Value;
+// All of Lox's data types
+typedef enum
+{
+	VAL_BOOL,
+	VAL_NIL,
+	VAL_NUMBER,
+} ValueType;
+
+// Tagged union to hold value
+typedef struct
+{
+	ValueType type;
+	union
+	{
+		bool boolean;
+		double number;
+	} as;
+} Value;
+
+// Type check macros
+
+#define IS_BOOL(value) ((value).type == VAL_BOOL)
+#define IS_NIL(value) ((value).type == VAL_NIL)
+#define IS_NUMBER(value) ((value).type == VAL_NUMBER)
+
+// Conversion macros
+
+#define AS_BOOL(value) ((value).as.boolean)
+#define AS_NUMBER(value) ((value).as.number)
+
+#define BOOL_VAL(value) ((Value){VAL_BOOL, {.boolean = value}})
+#define NIL_VAL ((Value){VAL_NIL, {.number = 0}})
+#define NUMBER_VAL(value) ((Value){VAL_NUMBER, {.number = value}})
 
 /* Struct containing array of constant Values with:
 	- "count" as the index of the next "Value" to be added
