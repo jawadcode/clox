@@ -57,6 +57,15 @@ static Value peek(int distance)
 	return vm.stackTop[-1 - distance];
 }
 
+/* Checks if value is falsey, the two cases are:
+ * - if the value is false
+ * - if the value is nil
+ */
+static bool isFalsey(Value value)
+{
+	return IS_NIL(value) || (IS_BOOL(value) & !AS_BOOL(value));
+}
+
 static InterpretResult run()
 {
 #define READ_BYTE() (*vm.ip++)
@@ -65,17 +74,17 @@ static InterpretResult run()
 // Perform binary operation on top two items in the stack
 // Do number typecheck
 // "do {} while (false)" makes it so that all of the statements end up in the same scope
-#define BINARY_OP(valueType, op)                    \
-	do                                                \
-	{                                                 \
-		if (!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1))) \
-		{                                               \
-			runtimeError("Operands must be numbers.");    \
-			return INTERPRET_RUNTIME_ERROR;               \
-		}                                               \
-		double b = AS_NUMBER(pop());                    \
-		double a = AS_NUMBER(pop());                    \
-		push(valueType(a op b));                        \
+#define BINARY_OP(valueType, op)                       \
+	do                                                   \
+	{                                                    \
+		if (!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1)))    \
+		{                                                  \
+			runtimeError("Binary operands must be numbers"); \
+			return INTERPRET_RUNTIME_ERROR;                  \
+		}                                                  \
+		double b = AS_NUMBER(pop());                       \
+		double a = AS_NUMBER(pop());                       \
+		push(valueType(a op b));                           \
 	} while (false)
 
 	for (;;)
@@ -102,6 +111,30 @@ static InterpretResult run()
 			push(constant);
 			break;
 		}
+		// Keyword constants
+		case OP_NIL:
+			push(NIL_VAL);
+			break;
+		case OP_TRUE:
+			push(BOOL_VAL(true));
+			break;
+		case OP_FALSE:
+			push(BOOL_VAL(false));
+			break;
+		case OP_EQUAL:
+		{
+			Value b = pop();
+			Value a = pop();
+			push(BOOL_VAL(valuesEqual(a, b)));
+			break;
+		}
+		// Binary Operations
+		case OP_GREATER:
+			BINARY_OP(BOOL_VAL, >);
+			break;
+		case OP_LESS:
+			BINARY_OP(BOOL_VAL, <);
+			break;
 		case OP_ADD:
 			BINARY_OP(NUMBER_VAL, +);
 			break;
@@ -114,6 +147,10 @@ static InterpretResult run()
 		case OP_DIVIDE:
 			BINARY_OP(NUMBER_VAL, /);
 			break;
+		// Unary operations
+		case OP_NOT:
+			push(BOOL_VAL(isFalsey(pop())));
+			break;
 		case OP_NEGATE:
 			if (!IS_NUMBER(peek(0)))
 			{
@@ -124,6 +161,7 @@ static InterpretResult run()
 			// Pop last value from stack, negate it, and then push it back on
 			push(NUMBER_VAL(-AS_NUMBER(pop())));
 			break;
+		// Special
 		case OP_RETURN:
 			// Print value of last item in stack before exiting
 			printValue(pop());

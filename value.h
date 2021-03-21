@@ -49,6 +49,9 @@ typedef struct
 	Value *values;
 } ValueArray;
 
+// Check if values "a" and "b" are equal
+bool valuesEqual(Value a, Value b);
+
 // Initialise "array" by zeroing-out values
 void initValueArray(ValueArray *array);
 // Free all memory used by "array->values" and reinitialise "array"
