@@ -38,10 +38,16 @@ struct ObjString
 	char *chars;
 };
 
-// Copy string over from source code string 
+// Take ownership of string (instead of copying) and wrap in string object
+ObjString *takeString(char *chars, int length);
+
+// Copy string over from source code string
 // (to prevent trying to free parts of the original string)
 // and return it wrapped in an "ObjString"
 ObjString *copyString(const char *chars, int length);
+
+// Print any Object
+void printObject(Value value);
 
 static inline bool isObjType(Value value, ObjType type)
 {

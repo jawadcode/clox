@@ -1,9 +1,12 @@
 #include <stdarg.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "common.h"
 #include "compiler.h"
 #include "debug.h"
+#include "object.h"
+#include "memory.h"
 #include "vm.h"
 
 VM vm;
@@ -64,6 +67,28 @@ static Value peek(int distance)
 static bool isFalsey(Value value)
 {
 	return IS_NIL(value) || (IS_BOOL(value) & !AS_BOOL(value));
+}
+
+// Pop last two strings off of stack, concatenate and then push the result
+static void concatenate()
+{
+	// Last in, first out, so the first string will be the second one from the top of the stack
+	ObjString *b = AS_STRING(pop());
+	ObjString *a = AS_STRING(pop());
+
+	// Resulting length of concatenated string
+	int length = a->length + b->length;
+	char *chars = ALLOCATE(char, length + 1);
+	// Copy "a" to "chars"
+	memcpy(chars, a->chars, a->length);
+	// Copy "b" to "chars" but with offset of the length of "a"
+	memcpy(chars + a->length, b->chars, b->length);
+	// Null terminator 🙄
+	chars[length] = '\0';
+
+	// Create string object without copying and just taking ownership instead
+	ObjString *result = takeString(chars, length);
+	push(OBJ_VAL(result));
 }
 
 static InterpretResult run()
@@ -136,6 +161,20 @@ static InterpretResult run()
 			BINARY_OP(BOOL_VAL, <);
 			break;
 		case OP_ADD:
+			if (IS_STRING(peek(0)) && IS_STRING(peek(1)))
+				concatenate();
+			else if (IS_NUMBER(peek(0)) && IS_NUMBER(peek(1)))
+			{
+				double b = AS_NUMBER(pop());
+				double a = AS_NUMBER(pop());
+				push(NUMBER_VAL(a + b));
+			}
+			else
+			{
+				runtimeError("Operands must be two numbers or two strings");
+				return INTERPRET_RUNTIME_ERROR;
+			}
+			break;
 			BINARY_OP(NUMBER_VAL, +);
 			break;
 		case OP_SUBTRACT:
