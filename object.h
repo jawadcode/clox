@@ -38,6 +38,11 @@ struct ObjString
 	char *chars;
 };
 
+// Copy string over from source code string 
+// (to prevent trying to free parts of the original string)
+// and return it wrapped in an "ObjString"
+ObjString *copyString(const char *chars, int length);
+
 static inline bool isObjType(Value value, ObjType type)
 {
 	return IS_OBJ(value) && AS_OBJ(value)->type == type;
