@@ -11,6 +11,7 @@
 	 - "ip" is the instruction pointer and points to an address within "chunk"
 	 - "stack" is the Virtual Machine's stack
 	 - "stackTop" is a pointer pointing just past the last element in "stack"
+	 - "objects" is a linked list of references to objects
  */
 typedef struct
 {
@@ -18,6 +19,8 @@ typedef struct
 	uint8_t *ip;
 	Value stack[STACK_MAX];
 	Value *stackTop;
+
+	Obj *objects;
 } VM;
 
 typedef enum
@@ -26,6 +29,8 @@ typedef enum
 	INTERPRET_COMPILE_ERROR,
 	INTERPRET_RUNTIME_ERROR,
 } InterpretResult;
+
+extern VM vm;
 
 // Initialise Virtual Machine and zero-out all fields
 void initVM();

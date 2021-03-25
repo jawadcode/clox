@@ -2,10 +2,14 @@
 #define clox_memory_h
 
 #include "common.h"
+#include "object.h"
 
 // Alloc space for array of type "type" and length "count"
 #define ALLOCATE(type, count) \
 	(type *)reallocate(NULL, 0, sizeof(type) * (count))
+
+// Resize array to 0 bytes
+#define FREE(type, pointer) reallocate(pointer, sizeof(type), 0)
 
 // GROW_CAPACITY grows a given capacity to either 8 if capacity < 8 or double if capacity >= 8
 #define GROW_CAPACITY(capacity) \
@@ -27,5 +31,8 @@
 	 - and finally, if oldSize != 0 and newSize > oldSize then grow the existing allocation.
  */
 void *reallocate(void *pointer, size_t oldSize, size_t newSize);
+
+// Free all of the object references in the linked list
+void freeObjects();
 
 #endif
