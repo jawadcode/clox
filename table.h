@@ -12,9 +12,9 @@ typedef struct
 } Entry;
 
 /* Hash Table
- * - "count" is the current number of entries in the table (including tombstones)
- * - "capacity" is the allocated size of the table
- * - "entries" is the actual array of key and value pairs
+   - "count" is the current number of entries in the table (including tombstones)
+   - "capacity" is the allocated size of the table
+   - "entries" is the actual array of key and value pairs
  */
 typedef struct
 {
@@ -36,5 +36,7 @@ bool tableSet(Table *table, ObjString *key, Value value);
 bool tableDelete(Table *table, ObjString *key);
 // Helper to copy over all values "from" one table "to" another
 void tableAddAll(Table *from, Table *to);
+// Find interned string "chars" in "table"
+ObjString *tableFindString(Table *table, const char *chars, int length, uint32_t hash);
 
 #endif

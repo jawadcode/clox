@@ -2,6 +2,7 @@
 #define clox_vm_h
 
 #include "chunk.h"
+#include "table.h"
 #include "value.h"
 
 #define STACK_MAX 256
@@ -11,6 +12,7 @@
 	 - "ip" is the instruction pointer and points to an address within "chunk"
 	 - "stack" is the Virtual Machine's stack
 	 - "stackTop" is a pointer pointing just past the last element in "stack"
+	 - "strings" is a table of all of the interned strings
 	 - "objects" is a linked list of references to objects
  */
 typedef struct
@@ -19,6 +21,7 @@ typedef struct
 	uint8_t *ip;
 	Value stack[STACK_MAX];
 	Value *stackTop;
+	Table strings;
 
 	Obj *objects;
 } VM;
