@@ -125,7 +125,8 @@ static inline bool check(TokenType type)
 
 static bool match(TokenType type)
 {
-	if (!check(type)) return false;
+	if (!check(type))
+		return false;
 	advance();
 	return true;
 }
@@ -188,6 +189,25 @@ static void declaration();
 static ParseRule *getRule(TokenType type);
 // Parse tokens until the token's precedence is higher than "precedence"
 static void parsePrecedence(Precedence precedence);
+
+// Takes in token "name" and adds its lexeme to the chunk's constants table as a string
+// its index in the table is then returned
+static uint8_t identifierConstant(Token *name)
+{
+	return makeConstant(OBJ_VAL(copyString(name->start, name->length)));
+}
+
+// Requires next token to be identifier, which is consumed and sent to "identifierConstant()"
+static uint8_t parseVariable(const char *errorMessage)
+{
+	consume(TOKEN_IDENTIFIER, errorMessage);
+	return identifierConstant(&parser.previous);
+}
+
+static void defineVariable(uint8_t global)
+{
+	emitBytes(OP_DEFINE_GLOBAL, global);
+}
 
 // Compile binary expression
 static void binary()
@@ -372,6 +392,23 @@ static void expression()
 	parsePrecedence(PREC_ASSIGNMENT);
 }
 
+// Parse and compile variable declaration
+static void varDeclaration()
+{
+	uint8_t global = parseVariable("Expected variable name");
+
+	// If there is an "=" then parse the expression after it
+	if (match(TOKEN_EQUAL))
+		expression();
+	// If it is just "var thing;" then assign nil to the variable
+	else
+		emitByte(OP_NIL);
+
+	consume(TOKEN_SEMICOLON, "Expected ';' after variable declaration");
+	defineVariable(global);
+}
+
+// Parse and compile an expression statement
 static void expressionStatement()
 {
 	expression();
@@ -387,29 +424,30 @@ static void printStatement()
 	emitByte(OP_PRINT);
 }
 
-// Ignores any subsequent errors until statement boundary
+// Skips tokens indiscriminately until statement boundary
 static void synchronize()
 {
 	parser.panicMode = false;
 	while (parser.current.type != TOKEN_EOF)
 	{
-		if (parser.previous.type == TOKEN_SEMICOLON) return;
+		if (parser.previous.type == TOKEN_SEMICOLON)
+			return;
 
 		switch (parser.current.type)
 		{
-			case TOKEN_CLASS:
-      case TOKEN_FUN:
-      case TOKEN_VAR:
-      case TOKEN_FOR:
-      case TOKEN_IF:
-      case TOKEN_WHILE:
-      case TOKEN_PRINT:
-      case TOKEN_RETURN:
-        return;
+		case TOKEN_CLASS:
+		case TOKEN_FUN:
+		case TOKEN_VAR:
+		case TOKEN_FOR:
+		case TOKEN_IF:
+		case TOKEN_WHILE:
+		case TOKEN_PRINT:
+		case TOKEN_RETURN:
+			return;
 
-      default:
-        // Do nothing.
-        ;
+		default:
+				// Do nothing.
+				;
 		}
 
 		advance();
@@ -418,9 +456,13 @@ static void synchronize()
 
 static void declaration()
 {
-	statement();
+	if (match(TOKEN_VAR))
+		varDeclaration();
+	else
+		statement();
 
-	if (parser.panicMode) synchronize();
+	if (parser.panicMode)
+		synchronize();
 }
 
 static void statement()

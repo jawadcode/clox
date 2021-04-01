@@ -14,6 +14,7 @@ typedef enum
 	OP_TRUE,
 	OP_FALSE,
 	OP_POP,
+	OP_DEFINE_GLOBAL,
 
 	// Binary Operations:
 
