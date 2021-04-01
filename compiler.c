@@ -117,6 +117,19 @@ static void consume(TokenType type, const char *message)
 	errorAtCurrent(message);
 }
 
+// Check the if the TokenType of the current token is equal to "token"
+static inline bool check(TokenType type)
+{
+	return parser.current.type == type;
+}
+
+static bool match(TokenType type)
+{
+	if (!check(type)) return false;
+	advance();
+	return true;
+}
+
 // Write single OpCode to current chunk with line number
 static void emitByte(uint8_t byte)
 {
@@ -164,8 +177,16 @@ static void endCompiler()
 }
 
 // Forward declarations
+
+// Parse and compile expression
 static void expression();
+// Parse and compile statement
+static void statement();
+// Parse and compile declaration
+static void declaration();
+// Get ParseRule from TokenType
 static ParseRule *getRule(TokenType type);
+// Parse tokens until the token's precedence is higher than "precedence"
 static void parsePrecedence(Precedence precedence);
 
 // Compile binary expression
@@ -344,10 +365,70 @@ static ParseRule *getRule(TokenType type)
 	return &rules[type];
 }
 
+// Parse and compile expression
 static void expression()
 {
 	// Parse the lowest precedence level
 	parsePrecedence(PREC_ASSIGNMENT);
+}
+
+static void expressionStatement()
+{
+	expression();
+	consume(TOKEN_SEMICOLON, "Expect ';' after expression");
+	emitByte(OP_POP);
+}
+
+// Parses print statement and emits "OP_PRINT" instruction
+static void printStatement()
+{
+	expression();
+	consume(TOKEN_SEMICOLON, "Expected ';' after value");
+	emitByte(OP_PRINT);
+}
+
+// Ignores any subsequent errors until statement boundary
+static void synchronize()
+{
+	parser.panicMode = false;
+	while (parser.current.type != TOKEN_EOF)
+	{
+		if (parser.previous.type == TOKEN_SEMICOLON) return;
+
+		switch (parser.current.type)
+		{
+			case TOKEN_CLASS:
+      case TOKEN_FUN:
+      case TOKEN_VAR:
+      case TOKEN_FOR:
+      case TOKEN_IF:
+      case TOKEN_WHILE:
+      case TOKEN_PRINT:
+      case TOKEN_RETURN:
+        return;
+
+      default:
+        // Do nothing.
+        ;
+		}
+
+		advance();
+	}
+}
+
+static void declaration()
+{
+	statement();
+
+	if (parser.panicMode) synchronize();
+}
+
+static void statement()
+{
+	if (match(TOKEN_PRINT))
+		printStatement();
+	else
+		expressionStatement();
 }
 
 bool compile(const char *source, Chunk *chunk)
@@ -359,8 +440,9 @@ bool compile(const char *source, Chunk *chunk)
 	parser.panicMode = false;
 
 	advance();
-	expression();
-	consume(TOKEN_EOF, "Expected end of expression");
+
+	while (!match(TOKEN_EOF))
+		declaration();
 
 	endCompiler();
 

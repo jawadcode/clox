@@ -7,12 +7,13 @@
 // Enum of all possible opcodes
 typedef enum
 {
-	// Constants:
+	// Values stuff:
 
 	OP_CONSTANT,
 	OP_NIL,
 	OP_TRUE,
 	OP_FALSE,
+	OP_POP,
 
 	// Binary Operations:
 
@@ -29,6 +30,7 @@ typedef enum
 
 	OP_NOT,
 	OP_NEGATE,
+	OP_PRINT, // r/technicallythetruth
 
 	// Special:
 

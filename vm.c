@@ -150,6 +150,9 @@ static InterpretResult run()
 		case OP_FALSE:
 			push(BOOL_VAL(false));
 			break;
+		case OP_POP:
+			pop();
+			break;
 		case OP_EQUAL:
 		{
 			Value b = pop();
@@ -204,11 +207,13 @@ static InterpretResult run()
 			// Pop last value from stack, negate it, and then push it back on
 			push(NUMBER_VAL(-AS_NUMBER(pop())));
 			break;
-		// Special
-		case OP_RETURN:
-			// Print value of last item in stack before exiting
+		case OP_PRINT:
 			printValue(pop());
 			printf("\n");
+			break;
+		// Special
+		case OP_RETURN:
+			// Exit interpreter
 			return INTERPRET_OK;
 		}
 	}
