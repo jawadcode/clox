@@ -37,6 +37,7 @@ struct ObjString
 	Obj obj;
 	int length;
 	char *chars;
+	uint32_t hash;
 };
 
 // Take ownership of string (instead of copying) and wrap in string object
