@@ -1,0 +1,3 @@
+var hello = "Hello";
+var hworld = hello + " " + "World";
+print hworld;

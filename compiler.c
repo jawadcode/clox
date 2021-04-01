@@ -197,7 +197,7 @@ static uint8_t identifierConstant(Token *name)
 	return makeConstant(OBJ_VAL(copyString(name->start, name->length)));
 }
 
-// Requires next token to be identifier, which is consumed and sent to "identifierConstant()"
+// Requires next token to be identifier and then returns index of constant in table from "identifierConstant()"
 static uint8_t parseVariable(const char *errorMessage)
 {
 	consume(TOKEN_IDENTIFIER, errorMessage);
@@ -295,6 +295,17 @@ static void string()
 																	parser.previous.length - 2)));
 }
 
+static void namedVariable(Token name)
+{
+	uint8_t arg = identifierConstant(&name);
+	emitBytes(OP_GET_GLOBAL, arg);
+}
+
+static void variable()
+{
+	namedVariable(parser.previous);
+}
+
 // Compile unary expression
 static void unary()
 {
@@ -338,7 +349,7 @@ ParseRule rules[] = {
 		[TOKEN_GREATER_EQUAL] = {NULL, binary, PREC_COMPARISON},
 		[TOKEN_LESS] = {NULL, binary, PREC_COMPARISON},
 		[TOKEN_LESS_EQUAL] = {NULL, binary, PREC_COMPARISON},
-		[TOKEN_IDENTIFIER] = {NULL, NULL, PREC_NONE},
+		[TOKEN_IDENTIFIER] = {variable, NULL, PREC_NONE},
 		[TOKEN_STRING] = {string, NULL, PREC_NONE},
 		[TOKEN_NUMBER] = {number, NULL, PREC_NONE},
 		[TOKEN_AND] = {NULL, NULL, PREC_NONE},
