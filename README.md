@@ -4,7 +4,7 @@ This is a bytecode interpreter written in C for the Lox programming language fol
 
 ## Prerequisites:
 - GCC (Clang will probably work too)
-- C STD Lib Header files
+- C STD Lib Header files (included in all Linux distros)
 
 ## How to run:
 - `gcc *.c -o clox` to compile the source into an executable called `clox`
