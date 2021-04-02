@@ -7,15 +7,19 @@
 // Enum of all possible opcodes
 typedef enum
 {
-	// Values stuff:
+	// Constants:
 
 	OP_CONSTANT,
 	OP_NIL,
 	OP_TRUE,
 	OP_FALSE,
+
+	// Value Operations:
+
 	OP_POP,
 	OP_GET_GLOBAL,
 	OP_DEFINE_GLOBAL,
+	OP_SET_GLOBAL,
 
 	// Binary Operations:
 

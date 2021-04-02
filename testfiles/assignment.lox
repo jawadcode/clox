@@ -1,0 +1,4 @@
+var greeting = "Hello";
+var world = "World";
+greeting = greeting + " " + world;
+print greeting;
