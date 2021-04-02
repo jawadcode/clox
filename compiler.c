@@ -9,7 +9,7 @@
 #include "debug.h"
 #endif
 
-/* State for parser:
+/* Parser State:
  * - "current" is the current token being parsed
  * - "previous" is the previous token
  * - "hadError" is passed to the caller of "compile"
@@ -22,8 +22,6 @@ typedef struct
 	bool hadError;
 	bool panicMode;
 } Parser;
-
-Parser parser;
 
 // Different levels of precedence
 typedef enum
@@ -43,6 +41,11 @@ typedef enum
 
 typedef void (*ParseFn)(bool canAssign);
 
+/* A Parser Rule
+	 - "prefix" is a pointer to a parser function for the token if it were a prefix
+	 - "info" is a pointer to a parser function for the token if it were infix
+	 - "precedence" is the parsing precedence of the token relative to other tokens
+ */
 typedef struct
 {
 	ParseFn prefix;
@@ -50,7 +53,33 @@ typedef struct
 	Precedence precedence;
 } ParseRule;
 
+/* A Local Variable
+	 - "name" is the Token storing the name of the variable
+	 - "depth" is the scope depth of the local variable
+ */
+typedef struct
+{
+	Token name;
+	int depth;
+} Local;
+
+/* Compiler state
+	 - "locals" stores all of the local variables
+	 - "localCount" is the current number of local variables in "locals"
+	 - "scopeDepth" is the current scope depth
+ */
+typedef struct
+{
+	Local locals[UINT8_COUNT];
+	int localCount;
+	int scopeDepth;
+} Compiler;
+
+Parser parser;
+
 Chunk *compilingChunk;
+
+Compiler *current = NULL;
 
 static Chunk *currentChunk()
 {
@@ -91,6 +120,7 @@ static void error(const char *message)
 	errorAt(&parser.previous, message);
 }
 
+// Advance to next token
 static void advance()
 {
 	parser.previous = parser.current;
@@ -166,6 +196,13 @@ static uint8_t makeConstant(Value value)
 static void emitConstant(Value value)
 {
 	emitBytes(OP_CONSTANT, makeConstant(value));
+}
+
+static void initCompiler(Compiler *compiler)
+{
+	compiler->localCount = 0;
+	compiler->scopeDepth = 0;
+	current = compiler;
 }
 
 static void endCompiler()
@@ -499,6 +536,8 @@ static void statement()
 bool compile(const char *source, Chunk *chunk)
 {
 	initScanner(source);
+	Compiler compiler;
+	initCompiler(&compiler);
 	compilingChunk = chunk;
 
 	parser.hadError = false;

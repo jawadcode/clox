@@ -21,7 +21,7 @@ typedef enum
 	VAL_OBJ, // Heap allocated values
 } ValueType;
 
-// Tagged union to hold value
+// Tagged union that represents Lox value
 typedef struct
 {
 	ValueType type;
