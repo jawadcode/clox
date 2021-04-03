@@ -1,0 +1,6 @@
+{
+  var a = 123;
+  print a;
+}
+// Should throw error
+print a;
