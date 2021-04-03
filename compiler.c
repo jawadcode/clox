@@ -266,9 +266,10 @@ static void addLocal(Token name)
 
 	Local *local = &current->locals[current->localCount++];
 	local->name = name;
-	local->depth = current->scopeDepth;
+	local->depth = -1;
 }
 
+// Checks if 2 identifier tokens are equal
 static bool identifiersEqual(Token *a, Token *b)
 {
 	if (a->length != b->length)
@@ -276,12 +277,33 @@ static bool identifiersEqual(Token *a, Token *b)
 	return memcmp(a->start, b->start, a->length) == 0;
 }
 
+// Walk list of locals backwards to find most recently declared variable with the identifier
+static int resolveLocal(Compiler *compiler, Token *name)
+{
+	for (int i = compiler->localCount - 1; i >= 0; i--)
+	{
+		Local *local = &compiler->locals[i];
+		if (identifiersEqual(name, &local->name))
+		{
+			if (local->depth == -1)
+				error("Can't read local variable from its own initializer");
+			
+			return i;
+		}
+	}
+
+	// Variable does not exist
+	return -1;
+}
+
 static void declareVariable()
 {
+	// Check if global variable
 	if (current->scopeDepth == 0)
 		return;
-
+	// else
 	Token *name = &parser.previous;
+	// Walk current scope's list of locals backwards to check the variable has already been declared
 	for (int i = current->localCount - 1; i >= 0; i--)
 	{
 		Local *local = &current->locals[i];
@@ -307,10 +329,18 @@ static uint8_t parseVariable(const char *errorMessage)
 	return identifierConstant(&parser.previous);
 }
 
+// Mark variable as usable by setting the scope depth
+static void markInitialized()
+{
+	current->locals[current->localCount - 1].depth = current->scopeDepth;
+}
+
 static void defineVariable(uint8_t global)
 {
 	if (current->scopeDepth > 0)
-		return;
+	{
+		return markInitialized();
+	}
 
 	emitBytes(OP_DEFINE_GLOBAL, global);
 }
@@ -403,15 +433,27 @@ static void string(bool canAssign)
 
 static void namedVariable(Token name, bool canAssign)
 {
-	uint8_t arg = identifierConstant(&name);
+	uint8_t getOp, setOp;
+	int arg = resolveLocal(current, &name);
+	if (arg != -1)
+	{
+		getOp = OP_GET_LOCAL;
+		setOp = OP_SET_LOCAL;
+	}
+	else
+	{
+		arg = identifierConstant(&name);
+		getOp = OP_GET_GLOBAL;
+		setOp = OP_SET_GLOBAL;
+	}
 
 	if (canAssign && match(TOKEN_EQUAL))
 	{
 		expression();
-		emitBytes(OP_SET_GLOBAL, arg);
+		emitBytes(setOp, (uint8_t)arg);
 	}
 	else
-		emitBytes(OP_GET_GLOBAL, arg);
+		emitBytes(getOp, (uint8_t)arg);
 }
 
 static void variable(bool canAssign)
