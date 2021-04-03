@@ -214,6 +214,18 @@ static void endCompiler()
 #endif
 }
 
+// Begins new scope and increments "current->scopeDepth"
+static void beginScope()
+{
+	current->scopeDepth++;
+}
+
+// End the current scope and decrement "current->scopeDepth"
+static void endScope()
+{
+	current->scopeDepth--;
+}
+
 // Forward declarations
 
 // Parse and compile expression
@@ -452,6 +464,16 @@ static void expression()
 	parsePrecedence(PREC_ASSIGNMENT);
 }
 
+static void block()
+{
+	while (!check(TOKEN_RIGHT_BRACE) && !check(TOKEN_EOF))
+	{
+		declaration();
+	}
+
+	consume(TOKEN_RIGHT_BRACE, "Expected '}' after block");
+}
+
 // Parse and compile variable declaration
 static void varDeclaration()
 {
@@ -529,6 +551,12 @@ static void statement()
 {
 	if (match(TOKEN_PRINT))
 		printStatement();
+	else if (match(TOKEN_LEFT_BRACE))
+	{
+		beginScope();
+		block();
+		endScope();
+	}
 	else
 		expressionStatement();
 }
