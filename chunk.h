@@ -40,6 +40,11 @@ typedef enum
 	OP_NEGATE,
 	OP_PRINT, // r/technicallythetruth
 
+	// Jump Instructions:
+
+	OP_JUMP,
+	OP_JUMP_IF_FALSE,
+
 	// Special:
 
 	OP_RETURN,

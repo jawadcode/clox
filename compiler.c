@@ -175,12 +175,23 @@ static void emitBytes(uint8_t byte1, uint8_t byte2)
 	emitByte(byte2);
 }
 
+// Emit jump instruction followed by a 16 bit placeholder
+// and then return the position of the instruction
+static int emitJump(uint8_t instruction)
+{
+	emitByte(instruction);
+	emitByte(0xff);
+	emitByte(0xff);
+	return currentChunk()->count - 2;
+}
+
 // Emit "OP_RETURN" instruction and end program
 static void emitReturn()
 {
 	emitByte(OP_RETURN);
 }
 
+// Add value to constants array
 static uint8_t makeConstant(Value value)
 {
 	int constant = addConstant(currentChunk(), value);
@@ -197,6 +208,19 @@ static uint8_t makeConstant(Value value)
 static void emitConstant(Value value)
 {
 	emitBytes(OP_CONSTANT, makeConstant(value));
+}
+
+// Patch a jump instruction with the correct value
+static void patchJump(int offset)
+{
+	// -2 to adjust for the jump offset's bytecode itself
+	int jump = currentChunk()->count - offset - 2;
+
+	if (jump > UINT16_MAX)
+		error("Too much code to jump over");
+
+	currentChunk()->code[offset] = (jump >> 8) & 0xff;
+	currentChunk()->code[offset + 1] = jump & 0xff;
 }
 
 static void initCompiler(Compiler *compiler)
@@ -287,7 +311,7 @@ static int resolveLocal(Compiler *compiler, Token *name)
 		{
 			if (local->depth == -1)
 				error("Can't read local variable from its own initializer");
-			
+
 			return i;
 		}
 	}
@@ -593,8 +617,39 @@ static void varDeclaration()
 static void expressionStatement()
 {
 	expression();
-	consume(TOKEN_SEMICOLON, "Expect ';' after expression");
+	consume(TOKEN_SEMICOLON, "Expected ';' after expression");
 	emitByte(OP_POP);
+}
+
+// Parse and compile an if statement (including else if it is included)
+static void ifStatement()
+{
+	// Compile the condition so the result is left on the top of the stack
+	consume(TOKEN_LEFT_PAREN, "Expected '(' after 'if'");
+	expression();
+	consume(TOKEN_RIGHT_PAREN, "Expected ')' after condition");
+
+	// Emit jump instruction with placeholder value
+	// (because we don't know how far to jump ahead yet)
+	int thenJump = emitJump(OP_JUMP_IF_FALSE);
+	// Statements must have a net 0 impact on the stack
+	// so emit a pop to clean up the conditional value
+	emitByte(OP_POP);
+	// Compile 'then' block
+	statement();
+
+	// Emit jump instruction to skip else statement
+	int elseJump = emitJump(OP_JUMP);
+
+	// Patch the jump instruction with the actual length to jump
+	patchJump(thenJump);
+	// Same as last one
+	emitByte(OP_POP);
+
+	// Look for "else" and then compile the following block/statement
+	if (match(TOKEN_ELSE)) statement();
+	// Patch the jump instruction for the else statement
+	patchJump(elseJump);
 }
 
 // Parses print statement and emits "OP_PRINT" instruction
@@ -650,6 +705,8 @@ static void statement()
 {
 	if (match(TOKEN_PRINT))
 		printStatement();
+	else if (match(TOKEN_IF))
+		ifStatement();
 	else if (match(TOKEN_LEFT_BRACE))
 	{
 		beginScope();

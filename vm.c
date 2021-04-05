@@ -101,6 +101,8 @@ static InterpretResult run()
 {
 #define READ_BYTE() (*vm.ip++)
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
+#define READ_SHORT() \
+	(vm.ip += 2, (uint16_t)((vm.ip[-2] << 8) | vm.ip[-1]))
 #define READ_STRING() AS_STRING(READ_CONSTANT())
 
 // Perform binary operation on top two items in the stack
@@ -256,6 +258,23 @@ static InterpretResult run()
 			printValue(pop());
 			printf("\n");
 			break;
+		case OP_JUMP:
+		{
+			// The jump length
+			uint16_t offset = READ_SHORT();
+			// Skip "vm.ip" ahead by "offset" bytes unconditionally
+			vm.ip += offset;
+			break;
+		}
+		case OP_JUMP_IF_FALSE:
+		{
+			// The jump length
+			uint16_t offset = READ_SHORT();
+			// If the condition is falsey then skip "vm.ip" ahead by "offset" bytes
+			if (isFalsey(peek(0)))
+				vm.ip += offset;
+			break;
+		}
 		// Special
 		case OP_RETURN:
 			// Exit interpreter
@@ -264,6 +283,7 @@ static InterpretResult run()
 	}
 
 #undef READ_BYTE
+#undef READ_SHORT
 #undef READ_CONSTANT
 #undef READ_STRING
 #undef BINARY_OP

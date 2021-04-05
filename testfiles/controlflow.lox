@@ -1,0 +1,5 @@
+if (true) print "hi";
+else print "bye";
+
+if (false) print "no";
+else print "yes";
