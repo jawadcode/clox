@@ -175,6 +175,20 @@ static void emitBytes(uint8_t byte1, uint8_t byte2)
 	emitByte(byte2);
 }
 
+// Write "OP_LOOP" instruction
+static void emitLoop(int loopStart)
+{
+	emitByte(OP_LOOP);
+	// Size of loop: end minus start plus the size of the "OP_LOOP" instruction itself
+	int offset = currentChunk()->count - loopStart + 2;
+	if (offset > UINT16_MAX)
+		error("Loop body is too large");
+
+	// Encode 16 bit integer into two 8 bit integers
+	emitByte((offset >> 8) & 0xff);
+	emitByte(offset & 0xff);
+}
+
 // Emit jump instruction followed by a 16 bit placeholder
 // and then return the position of the instruction
 static int emitJump(uint8_t instruction)
@@ -687,6 +701,29 @@ static void printStatement()
 	emitByte(OP_PRINT);
 }
 
+// Parse and compile while statement
+static void whileStatement()
+{
+	// Position of the start of the loop (in terms of bytecode) so we can actually loop
+	int loopStart = currentChunk()->count;
+
+	consume(TOKEN_LEFT_PAREN, "Expetced '(' after 'while'");
+	// Parse the condition
+	expression();
+	consume(TOKEN_RIGHT_PAREN, "Expected ')' after condition");
+
+	int exitJump = emitJump(OP_JUMP_IF_FALSE);
+
+	emitByte(OP_POP);
+	// Parse the block
+	statement();
+
+	emitLoop(loopStart);
+
+	patchJump(exitJump);
+	emitByte(OP_POP);
+}
+
 // Skips tokens indiscriminately until statement boundary
 static void synchronize()
 {
@@ -734,6 +771,8 @@ static void statement()
 		printStatement();
 	else if (match(TOKEN_IF))
 		ifStatement();
+	else if (match(TOKEN_WHILE))
+		whileStatement();
 	else if (match(TOKEN_LEFT_BRACE))
 	{
 		beginScope();

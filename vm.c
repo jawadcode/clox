@@ -275,6 +275,14 @@ static InterpretResult run()
 				vm.ip += offset;
 			break;
 		}
+		case OP_LOOP:
+		{
+			// Number of bytes to jump backwards by
+			uint16_t offset = READ_SHORT();
+			// Jump
+			vm.ip -= offset;
+			break;
+		}
 		// Special
 		case OP_RETURN:
 			// Exit interpreter

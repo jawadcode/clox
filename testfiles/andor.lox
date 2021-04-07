@@ -1,0 +1,4 @@
+print true and true;
+print false or true;
+print " " == " " and nil;
+print 1 < 0 or false;
