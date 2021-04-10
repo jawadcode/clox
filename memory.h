@@ -26,7 +26,7 @@
 
 /* Reallocates space for an array based on these cases:
 	 - if oldSize == 0 and newSize != 0 then allocate a new block
-	 - if oldSize != 0 and newSize == 0 then free the allocation
+	 - if oldSize != 0 and newSize == 0 then free the existing allocation
 	 - if oldSize != 0 and newSize < oldSize then shrink the existing allocation
 	 - and finally, if oldSize != 0 and newSize > oldSize then grow the existing allocation.
  */

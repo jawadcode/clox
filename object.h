@@ -2,35 +2,49 @@
 #define clox_object_h
 
 #include "common.h"
+#include "chunk.h"
 #include "value.h"
 
 #define OBJ_TYPE(value) (AS_OBJ(value)->type)
 
 // Type check macros
 
+#define IS_FUNCTION(value) isObjType(value, OBJ_FUNCTION)
 #define IS_STRING(value) isObjType(value, OBJ_STRING)
 
 // Conversion macros
 
+#define AS_FUNCTION(value) ((ObjFunction *)AS_OBJ(value))
 #define AS_STRING(value) ((ObjString *)AS_OBJ(value))
 #define AS_CSTRING(value) (((ObjString *)AS_OBJ(value))->chars)
 
 // Different types of heap allocated objects
 typedef enum
 {
+	OBJ_FUNCTION,
 	OBJ_STRING,
 } ObjType;
 
-// Every other object type can be safely casted to type "Obj"
-// and the "type" field can be accessed because of how C arranges memory for a struct
-// Therefore, every other object type is (in the OOP sense) also an "Obj"
-// (but that does not mean every object type can safely be converted to any other object type)
+/*
+	Every other ObjThing type can be safely casted to type "Obj"
+	and the "type" field can be accessed because of how C arranges memory for a struct
+	Therefore, every other object type is (in the OOP sense) also an "Obj"
+	(but that does not mean every object type can safely be converted to any other object type)
+*/
 
 struct Obj
 {
 	ObjType type;
 	struct Obj *next;
 };
+
+typedef struct
+{
+	Obj obj;
+	int arity;
+	Chunk chunk;
+	ObjString *name;
+} ObjFunction;
 
 struct ObjString
 {
@@ -39,6 +53,9 @@ struct ObjString
 	char *chars;
 	uint32_t hash;
 };
+
+// Allocate and initialise a new function object and return it
+ObjFunction *newFunction();
 
 // Take ownership of string (instead of copying) and wrap in string object
 ObjString *takeString(char *chars, int length);
