@@ -279,7 +279,7 @@ static InterpretResult run()
 		{
 			// Number of bytes to jump backwards by
 			uint16_t offset = READ_SHORT();
-			// Jump
+			// Jump backwards
 			vm.ip -= offset;
 			break;
 		}

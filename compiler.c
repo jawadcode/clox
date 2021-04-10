@@ -184,7 +184,7 @@ static void emitLoop(int loopStart)
 	if (offset > UINT16_MAX)
 		error("Loop body is too large");
 
-	// Encode 16 bit integer into two 8 bit integers
+	// Split 16 bit integer into two 8 bit integers
 	emitByte((offset >> 8) & 0xff);
 	emitByte(offset & 0xff);
 }
@@ -661,6 +661,71 @@ static void expressionStatement()
 	emitByte(OP_POP);
 }
 
+static void forStatement()
+{
+	// Want to wrap entire loop in scope to prevent counter being accessed outside the loop
+	beginScope();
+
+	consume(TOKEN_LEFT_PAREN, "Expected '(' after 'for'");
+	if (match(TOKEN_SEMICOLON))
+	{
+		// No initializer
+	}
+	else if (match(TOKEN_VAR))
+		varDeclaration();
+	else
+		expressionStatement();
+
+	int loopStart = currentChunk()->count;
+
+	int exitJump = -1;
+	// If there is a condition clause
+	if (!match(TOKEN_SEMICOLON))
+	{
+		expression();
+		consume(TOKEN_SEMICOLON, "Expected ';' after loop condition");
+
+		// Jump out of loop if the condition is false
+		exitJump = emitJump(OP_JUMP_IF_FALSE);
+		// Pop result of loop condition from stack into the jump instruction
+		emitByte(OP_POP);
+	}
+
+	// If there is an increment clause
+	if (!match(TOKEN_RIGHT_PAREN))
+	{
+		// Emit jump to the end of the loop (because increment should run after the body)
+		int bodyJump = emitJump(OP_JUMP);
+
+		// Get position of the increment
+		int incrementStart = currentChunk()->count;
+		// Compile it
+		expression();
+		// Emit a pop to discard the value
+		emitByte(OP_POP);
+		consume(TOKEN_RIGHT_PAREN, "Expect ')' after for loop clauses");
+
+		// Loop back
+		emitLoop(loopStart);
+		loopStart = incrementStart;
+		patchJump(bodyJump);
+	}
+
+	statement();
+
+	emitLoop(loopStart);
+
+	// If there is a condition clause
+	if (exitJump != -1)
+	{
+		patchJump(exitJump);
+		// Pop result of condition from stack into jump instruction
+		emitJump(OP_POP);
+	}
+
+	endScope();
+}
+
 // Parse and compile an if statement (including else if it is included)
 static void ifStatement()
 {
@@ -769,6 +834,8 @@ static void statement()
 {
 	if (match(TOKEN_PRINT))
 		printStatement();
+	else if (match(TOKEN_FOR))
+		forStatement();
 	else if (match(TOKEN_IF))
 		ifStatement();
 	else if (match(TOKEN_WHILE))
