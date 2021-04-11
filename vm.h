@@ -1,15 +1,29 @@
 #ifndef clox_vm_h
 #define clox_vm_h
 
+#include "object.h"
 #include "chunk.h"
 #include "table.h"
 #include "value.h"
 
-#define STACK_MAX 256
+#define FRAMES_MAX 64
+#define STACK_MAX (FRAMES_MAX * UINT8_COUNT)
+
+/* The Call Frame for a function invocation:
+	 - "function" is a pointer to the function being invoked
+	 - "ip" is a relative instruction pointer for this invocation
+	 - "slots" points into the virtual machine's value stack at the first slot the invocation can use
+ */
+typedef struct
+{
+	ObjFunction *function;
+	uint8_t *ip;
+	Value *slots;
+} CallFrame;
 
 /* State for the Virtual Machine:
-	 - "chunk" holds the bytecode to be executed
-	 - "ip" is the instruction pointer and points to an address within "chunk"
+	 - "frames" is a stack that holds all of the current call frames
+	 - "frameCount" is the current height of "frames"
 	 - "stack" is the Virtual Machine's stack
 	 - "stackTop" is a pointer pointing just past the last element in "stack"
 	 - "strings" is a table of all of the interned strings
@@ -17,8 +31,9 @@
  */
 typedef struct
 {
-	Chunk *chunk;
-	uint8_t *ip;
+	CallFrame frames[FRAMES_MAX];
+	int frameCount;
+
 	Value stack[STACK_MAX];
 	Value *stackTop;
 	Table globals;
