@@ -75,14 +75,16 @@ typedef enum
 } FunctionType;
 
 /* Compiler state
+	 - "enclosing" is a linked list of enclosing compilers
 	 - "function" is the current function
 	 - "type" is the type of the current function
 	 - "locals" stores all of the local variables
 	 - "localCount" is the current number of local variables in "locals"
 	 - "scopeDepth" is the current scope depth
  */
-typedef struct
+typedef struct Compiler
 {
+	struct Compiler *enclosing;
 	ObjFunction *function;
 	FunctionType type;
 
@@ -254,12 +256,17 @@ static void patchJump(int offset)
 
 static void initCompiler(Compiler *compiler, FunctionType type)
 {
+	compiler->enclosing = current;
 	compiler->function = NULL;
 	compiler->type = type;
 	compiler->localCount = 0;
 	compiler->scopeDepth = 0;
 	compiler->function = newFunction();
 	current = compiler;
+
+	if (type != TYPE_SCRIPT)
+		// Name function with copy of the original
+		current->function->name = copyString(parser.previous.start, parser.previous.length);
 
 	Local *local = &current->locals[current->localCount++];
 	local->depth = 0;
@@ -277,6 +284,10 @@ static ObjFunction *endCompiler()
 																				 ? function->name->chars
 																				 : "<script>");
 #endif
+	// After the current function ends compilation,
+	// you want the (previously) enclosing compiler to be the current one
+
+	current = current->enclosing;
 	return function;
 }
 
@@ -397,6 +408,8 @@ static uint8_t parseVariable(const char *errorMessage)
 // Mark variable as usable by setting the scope depth
 static void markInitialized()
 {
+	if (current->scopeDepth == 0)
+		return;
 	current->locals[current->localCount - 1].depth = current->scopeDepth;
 }
 
@@ -664,6 +677,44 @@ static void block()
 	consume(TOKEN_RIGHT_BRACE, "Expected '}' after block");
 }
 
+static void function(FunctionType type)
+{
+	Compiler compiler;
+	initCompiler(&compiler, type);
+	beginScope();
+
+	// Compile the parameter list
+	consume(TOKEN_LEFT_PAREN, "Expected '(' after function name");
+	if (!check(TOKEN_RIGHT_PAREN))
+	{
+		do
+		{
+			current->function->arity++;
+			if (current->function->arity > 255)
+				errorAtCurrent("Exceeded limit of 255 function parameters");
+
+			uint8_t paramConstant = parseVariable("Expected parameter name");
+			defineVariable(paramConstant);
+		} while (match(TOKEN_COMMA));
+	}
+	consume(TOKEN_RIGHT_PAREN, "Expected ')' after parameters");
+
+	// Compile the body
+	consume(TOKEN_LEFT_BRACE, "Expected '{' before function body");
+	block();
+
+	ObjFunction *function = endCompiler();
+	emitBytes(OP_CONSTANT, makeConstant(OBJ_VAL(function)));
+}
+
+static void funDeclaration()
+{
+	uint8_t global = parseVariable("Expected function name");
+	markInitialized();
+	function(TYPE_FUNCTION);
+	defineVariable(global);
+}
+
 // Parse and compile variable declaration
 static void varDeclaration()
 {
@@ -848,7 +899,9 @@ static void synchronize()
 
 static void declaration()
 {
-	if (match(TOKEN_VAR))
+	if (match(TOKEN_FUN))
+		funDeclaration();
+	else if (match(TOKEN_VAR))
 		varDeclaration();
 	else
 		statement();
@@ -891,7 +944,7 @@ ObjFunction *compile(const char *source)
 	while (!match(TOKEN_EOF))
 		declaration();
 
-	endCompiler();
+	// endCompiler();
 
 	ObjFunction *function = endCompiler();
 	return parser.hadError ? NULL : function;
