@@ -219,6 +219,7 @@ static int emitJump(uint8_t instruction)
 // Emit "OP_RETURN" instruction and end program
 static void emitReturn()
 {
+	emitByte(OP_NIL);
 	emitByte(OP_RETURN);
 }
 
@@ -423,6 +424,22 @@ static void defineVariable(uint8_t global)
 	emitBytes(OP_DEFINE_GLOBAL, global);
 }
 
+static uint8_t argumentList()
+{
+	uint8_t argCount = 0;
+	if (!check(TOKEN_RIGHT_PAREN))
+		do
+		{
+			expression();
+			if (argCount == 255)
+				error("Exceeded limit of 255 function arguments");
+			argCount++;
+		} while (match(TOKEN_COMMA));
+
+	consume(TOKEN_RIGHT_PAREN, "Expected ')' after arguments");
+	return argCount;
+}
+
 // Parse and compile "and" operation
 static void and_(bool canAssign)
 {
@@ -482,6 +499,12 @@ static void binary(bool canAssign)
 	default:
 		return; // Unreachable.
 	}
+}
+
+static void call(bool canAssign)
+{
+	uint8_t argCount = argumentList();
+	emitBytes(OP_CALL, argCount);
 }
 
 static void literal(bool canAssign)
@@ -589,7 +612,7 @@ static void unary(bool canAssign)
 }
 
 ParseRule rules[] = {
-		[TOKEN_LEFT_PAREN] = {grouping, NULL, PREC_NONE},
+		[TOKEN_LEFT_PAREN] = {grouping, call, PREC_CALL},
 		[TOKEN_RIGHT_PAREN] = {NULL, NULL, PREC_NONE},
 		[TOKEN_LEFT_BRACE] = {NULL, NULL, PREC_NONE},
 		[TOKEN_RIGHT_BRACE] = {NULL, NULL, PREC_NONE},
@@ -844,6 +867,21 @@ static void printStatement()
 	emitByte(OP_PRINT);
 }
 
+// Parse and compile return statement
+static void returnStatement()
+{
+	if (current->type == TYPE_SCRIPT)
+		error("Can't return from top-level code");
+	if (match(TOKEN_SEMICOLON))
+		emitReturn();
+	else
+	{
+		expression();
+		consume(TOKEN_SEMICOLON, "Expected ';' after return value");
+		emitByte(OP_RETURN);
+	}
+}
+
 // Parse and compile while statement
 static void whileStatement()
 {
@@ -918,6 +956,8 @@ static void statement()
 		forStatement();
 	else if (match(TOKEN_IF))
 		ifStatement();
+	else if (match(TOKEN_RETURN))
+		returnStatement();
 	else if (match(TOKEN_WHILE))
 		whileStatement();
 	else if (match(TOKEN_LEFT_BRACE))

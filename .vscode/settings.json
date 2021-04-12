@@ -1,8 +1,0 @@
-{
-	"files.associations": {
-		"limits": "c",
-		"ratio": "c",
-		"*.tcc": "c",
-		"type_traits": "c"
-	}
-}

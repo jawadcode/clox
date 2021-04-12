@@ -48,6 +48,7 @@ typedef enum
 
 	// Special:
 
+	OP_CALL,
 	OP_RETURN,
 } OpCode;
 
