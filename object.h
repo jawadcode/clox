@@ -10,11 +10,14 @@
 // Type check macros
 
 #define IS_FUNCTION(value) isObjType(value, OBJ_FUNCTION)
+#define IS_NATIVE(value) isObjType(value, OBJ_NATIVE)
 #define IS_STRING(value) isObjType(value, OBJ_STRING)
 
 // Conversion macros
 
 #define AS_FUNCTION(value) ((ObjFunction *)AS_OBJ(value))
+#define AS_NATIVE(value) \
+	(((ObjNative *)AS_OBJ(value))->function)
 #define AS_STRING(value) ((ObjString *)AS_OBJ(value))
 #define AS_CSTRING(value) (((ObjString *)AS_OBJ(value))->chars)
 
@@ -22,6 +25,7 @@
 typedef enum
 {
 	OBJ_FUNCTION,
+	OBJ_NATIVE,
 	OBJ_STRING,
 } ObjType;
 
@@ -46,6 +50,15 @@ typedef struct
 	ObjString *name;
 } ObjFunction;
 
+// Pointer to native/built-in function
+typedef Value (*NativeFn)(int argCOumt, Value *args);
+
+typedef struct
+{
+	Obj obj;
+	NativeFn function;
+} ObjNative;
+
 struct ObjString
 {
 	Obj obj;
@@ -56,6 +69,9 @@ struct ObjString
 
 // Allocate and initialise a new function object and return it
 ObjFunction *newFunction();
+
+// Allocate and initialise native function
+ObjNative *newNative(NativeFn function);
 
 // Take ownership of string (instead of copying) and wrap in string object
 ObjString *takeString(char *chars, int length);
