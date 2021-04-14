@@ -46,9 +46,10 @@ typedef enum
 	OP_JUMP_IF_FALSE,
 	OP_LOOP,
 
-	// Special:
+	// Function stuff:
 
 	OP_CALL,
+	OP_CLOSURE,
 	OP_RETURN,
 } OpCode;
 

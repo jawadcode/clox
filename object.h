@@ -9,12 +9,14 @@
 
 // Type check macros
 
+#define IS_CLOSURE(value) isObjType(value, OBJ_CLOSURE)
 #define IS_FUNCTION(value) isObjType(value, OBJ_FUNCTION)
 #define IS_NATIVE(value) isObjType(value, OBJ_NATIVE)
 #define IS_STRING(value) isObjType(value, OBJ_STRING)
 
 // Conversion macros
 
+#define AS_CLOSURE(value) ((ObjClosure *)AS_OBJ(value))
 #define AS_FUNCTION(value) ((ObjFunction *)AS_OBJ(value))
 #define AS_NATIVE(value) \
 	(((ObjNative *)AS_OBJ(value))->function)
@@ -24,6 +26,7 @@
 // Different types of heap allocated objects
 typedef enum
 {
+	OBJ_CLOSURE,
 	OBJ_FUNCTION,
 	OBJ_NATIVE,
 	OBJ_STRING,
@@ -51,7 +54,7 @@ typedef struct
 } ObjFunction;
 
 // Pointer to native/built-in function
-typedef Value (*NativeFn)(int argCOumt, Value *args);
+typedef Value (*NativeFn)(int argCount, Value *args);
 
 typedef struct
 {
@@ -66,6 +69,15 @@ struct ObjString
 	char *chars;
 	uint32_t hash;
 };
+
+typedef struct
+{
+	Obj obj;
+	ObjFunction *function;
+} ObjClosure;
+
+// Wrap an "ObjFunction" in a closure
+ObjClosure *newClosure(ObjFunction *function);
 
 // Allocate and initialise a new function object and return it
 ObjFunction *newFunction();
