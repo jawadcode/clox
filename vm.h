@@ -28,6 +28,8 @@ typedef struct {
          - "stackTop" is a pointer pointing just past the last element in
    "stack"
          - "strings" is a table of all of the interned strings
+         - "openUpvalues" is a linked list of all open upvalues to deduplicate
+   upvalues
          - "objects" is a linked list of references to objects
  */
 typedef struct {
@@ -38,6 +40,7 @@ typedef struct {
   Value *stackTop;
   Table globals;
   Table strings;
+  ObjUpvalue *openUpvalues;
 
   Obj *objects;
 } VM;

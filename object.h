@@ -32,8 +32,8 @@ typedef enum {
 } ObjType;
 
 /*
-        Every other ObjThing type can be safely casted to type "Obj"
-        and the "type" field can be accessed because of how C arranges memory
+   Every other ObjThing type can be safely casted to type "Obj"
+   and the "type" field can be accessed because of how C arranges memory
    for a struct Therefore, every other object type is (in the OOP sense) also an
    "Obj" (but that does not mean every object type can safely be converted to
    any other object type)
@@ -71,6 +71,8 @@ struct ObjString {
 typedef struct ObjUpvalue {
   Obj obj;
   Value *location;
+  Value closed;
+  struct ObjUpvalue *next;
 } ObjUpvalue;
 
 /* Closure which wraps every function:
