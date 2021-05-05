@@ -13,24 +13,21 @@ typedef struct ObjString ObjString;
 // End Forward Declarations
 
 // All of Lox's data types
-typedef enum
-{
-	VAL_BOOL,
-	VAL_NIL,
-	VAL_NUMBER,
-	VAL_OBJ, // Heap allocated values
+typedef enum {
+  VAL_BOOL,
+  VAL_NIL,
+  VAL_NUMBER,
+  VAL_OBJ, // Heap allocated values
 } ValueType;
 
 // Tagged union that represents Lox value
-typedef struct
-{
-	ValueType type;
-	union
-	{
-		bool boolean;
-		double number;
-		Obj *obj;
-	} as;
+typedef struct {
+  ValueType type;
+  union {
+    bool boolean;
+    double number;
+    Obj *obj;
+  } as;
 } Value;
 
 // Type check macros
@@ -52,15 +49,14 @@ typedef struct
 #define OBJ_VAL(object) ((Value){VAL_OBJ, {.obj = (Obj *)object}})
 
 /* Struct containing array of constant Values with:
-	- "count" as the index of the next "Value" to be added
-	- "capacity" as the allocated size of the array
-	- "values" as the actual, dynamically sized array of "Value"s
+        - "count" as the index of the next "Value" to be added
+        - "capacity" as the allocated size of the array
+        - "values" as the actual, dynamically sized array of "Value"s
  */
-typedef struct
-{
-	int count;
-	int capacity;
-	Value *values;
+typedef struct {
+  int count;
+  int capacity;
+  Value *values;
 } ValueArray;
 
 // Check if values "a" and "b" are equal

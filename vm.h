@@ -1,8 +1,8 @@
 #ifndef clox_vm_h
 #define clox_vm_h
 
-#include "object.h"
 #include "chunk.h"
+#include "object.h"
 #include "table.h"
 #include "value.h"
 
@@ -10,43 +10,42 @@
 #define STACK_MAX (FRAMES_MAX * UINT8_COUNT)
 
 /* The Call Frame for a function invocation:
-	 - "function" is a pointer to the function being invoked
-	 - "ip" is a relative instruction pointer for this invocation
-	 - "slots" points into the virtual machine's value stack at the first slot the invocation can use
+         - "function" is a pointer to the function being invoked
+         - "ip" is a relative instruction pointer for this invocation
+         - "slots" points into the virtual machine's value stack at the first
+   slot the invocation can use
  */
-typedef struct
-{
-	ObjClosure *closure;
-	uint8_t *ip;
-	Value *slots;
+typedef struct {
+  ObjClosure *closure;
+  uint8_t *ip;
+  Value *slots;
 } CallFrame;
 
 /* State for the Virtual Machine:
-	 - "frames" is a stack that holds all of the current call frames
-	 - "frameCount" is the current height of "frames"
-	 - "stack" is the Virtual Machine's stack
-	 - "stackTop" is a pointer pointing just past the last element in "stack"
-	 - "strings" is a table of all of the interned strings
-	 - "objects" is a linked list of references to objects
+         - "frames" is a stack that holds all of the current call frames
+         - "frameCount" is the current height of "frames"
+         - "stack" is the Virtual Machine's stack
+         - "stackTop" is a pointer pointing just past the last element in
+   "stack"
+         - "strings" is a table of all of the interned strings
+         - "objects" is a linked list of references to objects
  */
-typedef struct
-{
-	CallFrame frames[FRAMES_MAX];
-	int frameCount;
+typedef struct {
+  CallFrame frames[FRAMES_MAX];
+  int frameCount;
 
-	Value stack[STACK_MAX];
-	Value *stackTop;
-	Table globals;
-	Table strings;
+  Value stack[STACK_MAX];
+  Value *stackTop;
+  Table globals;
+  Table strings;
 
-	Obj *objects;
+  Obj *objects;
 } VM;
 
-typedef enum
-{
-	INTERPRET_OK,
-	INTERPRET_COMPILE_ERROR,
-	INTERPRET_RUNTIME_ERROR,
+typedef enum {
+  INTERPRET_OK,
+  INTERPRET_COMPILE_ERROR,
+  INTERPRET_RUNTIME_ERROR,
 } InterpretResult;
 
 extern VM vm;
@@ -59,7 +58,8 @@ void freeVM();
 InterpretResult interpret(const char *source);
 // Push "value" on the top of "vm.stack" and increment "vm.stackTop" pointer
 void push(Value value);
-// Decrements the "vm.stackTop" pointer and returns the value of what was at the top before it is overwritten
+// Decrements the "vm.stackTop" pointer and returns the value of what was at the
+// top before it is overwritten
 Value pop();
 
 #endif

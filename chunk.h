@@ -5,67 +5,67 @@
 #include "value.h"
 
 // Enum of all possible opcodes
-typedef enum
-{
-	// Constants:
+typedef enum {
+  // Constants:
 
-	OP_CONSTANT,
-	OP_NIL,
-	OP_TRUE,
-	OP_FALSE,
+  OP_CONSTANT,
+  OP_NIL,
+  OP_TRUE,
+  OP_FALSE,
 
-	// Value Operations:
+  // Value Operations:
 
-	OP_POP,
-	OP_GET_LOCAL,
-	OP_SET_LOCAL,
-	OP_GET_GLOBAL,
-	OP_DEFINE_GLOBAL,
-	OP_SET_GLOBAL,
+  OP_POP,
+  OP_GET_LOCAL,
+  OP_SET_LOCAL,
+  OP_GET_GLOBAL,
+  OP_DEFINE_GLOBAL,
+  OP_SET_GLOBAL,
+  OP_GET_UPVALUE,
+  OP_SET_UPVALUE,
 
-	// Binary Operations:
+  // Binary Operations:
 
-	OP_EQUAL,
-	OP_GREATER,
-	OP_LESS,
+  OP_EQUAL,
+  OP_GREATER,
+  OP_LESS,
 
-	OP_ADD,
-	OP_SUBTRACT,
-	OP_MULTIPLY,
-	OP_DIVIDE,
+  OP_ADD,
+  OP_SUBTRACT,
+  OP_MULTIPLY,
+  OP_DIVIDE,
 
-	// Unary Operations:
+  // Unary Operations:
 
-	OP_NOT,
-	OP_NEGATE,
-	OP_PRINT, // r/technicallythetruth
+  OP_NOT,
+  OP_NEGATE,
+  OP_PRINT, // r/technicallythetruth
 
-	// Jump Instructions:
+  // Jump Instructions:
 
-	OP_JUMP,
-	OP_JUMP_IF_FALSE,
-	OP_LOOP,
+  OP_JUMP,
+  OP_JUMP_IF_FALSE,
+  OP_LOOP,
 
-	// Function stuff:
+  // Function stuff:
 
-	OP_CALL,
-	OP_CLOSURE,
-	OP_RETURN,
+  OP_CALL,
+  OP_CLOSURE,
+  OP_RETURN,
 } OpCode;
 
 /* Chunk of bytecode:
    - "count" holds the index of the next code to be inserted
    - "capacity" is the allocated size of "code" (in bytes)
    - "code" is the actual array of opcodes
-	 - "constants" contains all of the constant values
+         - "constants" contains all of the constant values
  */
-typedef struct
-{
-	int count;
-	int capacity;
-	uint8_t *code;
-	int *lines;
-	ValueArray constants;
+typedef struct {
+  int count;
+  int capacity;
+  uint8_t *code;
+  int *lines;
+  ValueArray constants;
 } Chunk;
 
 // Initialise "chunk" by zeroing-out values
