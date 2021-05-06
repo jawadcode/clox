@@ -35,6 +35,12 @@
  */
 void *reallocate(void *pointer, size_t oldSize, size_t newSize);
 
+// Check if an object is no longer in use
+void markObject(Obj *object);
+
+// Mark value if it is heap allocated and out of use
+void markValue(Value value);
+
 // Collects unused memory
 void collectGarbage();
 

@@ -7,4 +7,6 @@
 // Compile source code and then returns "ObjFunction" that represents the script
 ObjFunction *compile(const char *source);
 
+void markCompilerRoots();
+
 #endif
