@@ -35,6 +35,9 @@
  */
 void *reallocate(void *pointer, size_t oldSize, size_t newSize);
 
+// Collects unused memory
+void collectGarbage();
+
 // Free all of the object references in the linked list
 void freeObjects();
 
